@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адреса хранения и сервисов</title>
+    <!-- Подключаем Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /*
+         * Убраны все сложные стили для .location-card, .service-card и .hidden-card
+         * Мы будем использовать только 'hidden' (display: none) от Tailwind для скрытия,
+         * чтобы избежать бага с "полосами".
+         */
+        
+        /* === ИЗМЕНЕНИЕ: Стили для табов (теперь очень явные) === */
+        .tab-btn {
+            transition: background-color 0.2s, color 0.2s;
+            border-top-left-radius: 0.375rem; /* rounded-md */
+            border-top-right-radius: 0.375rem; /* rounded-md */
+            padding: 0.75rem 1.5rem; /* py-3 px-6 */
+            background-color: #f3f4f6; /* gray-100 */
+            color: #4b5563; /* gray-600 */
+            font-weight: 500; /* medium */
+            font-size: 0.875rem; /* text-sm */
+        }
+        .tab-btn:hover {
+            background-color: #e5e7eb; /* gray-200 */
+        }
+        .active-tab {
+            background-color: #ffffff; /* white */
+            color: #3b82f6; /* blue-600 */
+            font-weight: 600; /* semibold */
+        }
+        .active-tab:hover {
+            background-color: #ffffff; /* Override hover for active */
+        }
+        
+        /* Стили для кнопок "Копировать" */
+        .copy-btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem; /* 4px */
+            padding: 0.375rem 0.75rem; /* py-1.5 px-3 */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* medium */
+            color: #4b5563; /* gray-600 */
+            background-color: #f3f4f6; /* gray-100 */
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            transition: background-color 0.15s ease-in-out;
+        }
+        .copy-btn-icon:hover {
+            background-color: #e5e7eb; /* gray-200 */
+        }
+        .copy-btn-icon:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .copy-btn-icon svg {
+            width: 1rem; /* w-4 */
+            height: 1rem; /* h-4 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <!-- Уведомление о копировании -->
+    <div id="toast" class="fixed top-5 right-5 z-50 bg-green-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transition-opacity duration-300">
+        Скопировано!
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Адреса хранения и сервисы</h1>
+            <p class="text-gray-600 mt-1">Список складов, ТК и автосервисов по установке.</p>
+        </header>
+
+        <!-- Переключатель табов -->
+        <div class="mb-6">
+            <!-- Обертка 'mb-6' добавляет отступ, 'flex space-x-2' располагает кнопки -->
+            <nav class="flex space-x-2" id="tabs">
+                <button data-tab="locations" class="tab-btn active-tab">
+                    Адреса хранения
+                </button>
+                <button data-tab="services" class="tab-btn">
+                    Адреса сервисов
+                </button>
+            </nav>
+        </div>
+
+        <!-- Строка поиска -->
+        <div class="mb-6">
+            <input 
+                type="text" 
+                id="searchBox"
+                placeholder="Поиск по городу..."
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+        </div>
+
+        <!-- Контейнер для АДРЕСОВ ХРАНЕНИЯ -->
+        <main id="locationsContainer" class="space-y-4">
+            <!-- Карточки адресов хранения будут здесь -->
+        </main>
+
+        <!-- Контейнер для АДРЕСОВ СЕРВИСОВ (скрыт по умолчанию) -->
+        <main id="servicesContainer" class="space-y-4 hidden">
+            <!-- Карточки сервисов будут здесь -->
+        </main>
+        
+        <!-- Сообщение "Ничего не найдено" -->
+        <div id="noResults" class="hidden text-center p-6 bg-white rounded-lg shadow-md text-gray-600">
+            Ничего не найдено.
+        </div>
+        
+        <!-- Сообщение об ошибке (скрыто по умолчанию) -->
+        <div id="errorDisplay" class="hidden mt-6 p-4 bg-red-100 text-red-700 border border-red-300 rounded-lg">
+            <h3 class="font-bold">Произошла ошибка</h3>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Оборачиваем все в try...catch
+            try {
+                // --- СПИСОК АДРЕСОВ ХРАНЕНИЯ (ТК, Склады) С КОНТАКТАМИ (Города исправлены) ---
+                const locations = [
+                    {
+                        city: "Астрахань",
+                        address: "Рождественского, д. 5 лит. 18",
+                        name: "Байкал-сервис",
+                        type: "ТК",
+                        contact: "Роман",
+                        phone: "8-937-508-88-10, 8-961-815-55-11"
+                    },
+                    {
+                        city: "Волгоград",
+                        address: "ул Пожарского, 352, кор 1",
+                        name: "Склад",
+                        type: "Склад",
+                        contact: "Александр",
+                        phone: "89053988712"
+                    },
+                    {
+                        city: "Волгоград",
+                        address: "Им. Неждановой, д. 6/1 \"ТК Байкал-Сервис\"",
+                        name: "Байкал",
+                        type: "ТК",
+                        contact: "Александр",
+                        phone: "89053988712"
+                    },
+                    {
+                        city: "Воронеж",
+                        address: "Димитрова, д. 154",
+                        name: "Байкал Сервис",
+                        type: "ТК",
+                        contact: "Сергей",
+                        phone: "89103488212"
+                    },
+                    {
+                        city: "Ижевск",
+                        address: "ул. Новоажимова 27",
+                        name: "ТК Байкал Сервис",
+                        type: "ТК",
+                        contact: "Павел",
+                        phone: "8-902-275-26-56, 8-912-446-29-22"
+                    },
+                    {
+                        city: "Казань",
+                        address: "Восстания 100, стр. 8300",
+                        name: "ТК Байкал Сервис",
+                        type: "ТК",
+                        contact: "Тимур",
+                        phone: "+79172581838"
+                    },
+                    {
+                        city: "Краснодар",
+                        address: "Автомобильная 13",
+                        name: "АТЭК",
+                        type: "ТК",
+                        contact: "Александр",
+                        phone: "89615158180"
+                    },
+                    {
+                        city: "Магнитогорск",
+                        address: "ул.Калинина 18",
+                        name: "Склад",
+                        type: "Склад",
+                        contact: "Сергей",
+                        phone: "89191200330"
+                    },
+                    {
+                        city: "Махачкала",
+                        address: "Хаджи Булача д. 80",
+                        name: "ТК \"Новая Линия\"",
+                        type: "ТК",
+                        contact: "Минатула",
+                        phone: "8 963 416-06-95"
+                    },
+                    {
+                        city: "Москва",
+                        address: "ул. Перовская 1, стр2",
+                        name: "ТК \"СЛТК\"",
+                        type: "ТК",
+                        contact: "Людмила",
+                        phone: "+7 915 087-85-58"
+                    },
+                    {
+                        city: "Нижний Новгород",
+                        address: "Вторчермета д.1",
+                        name: "Байкал Сервис",
+                        type: "ТК",
+                        contact: "Евгений",
+                        phone: "8-909-287-02-59"
+                    },
+                    {
+                        city: "Нижневартовск",
+                        address: "улица Мира, 5/П стр1",
+                        name: "ТК Фортуна Экспресс",
+                        type: "ТК",
+                        contact: "Диана",
+                        phone: "89527071056"
+                    },
+                    {
+                        city: "Новый уренгой",
+                        address: "Западная промзона, ул. Таёжная, 204/8А",
+                        name: "ТК Фортуна",
+                        type: "ТК",
+                        contact: "Диана",
+                        phone: "89527071056"
+                    },
+                    {
+                        city: "Омск",
+                        address: "10 лет октября 217к.2",
+                        name: "Байкал-сервис",
+                        type: "ТК",
+                        contact: "Юрий, Денис",
+                        phone: "89658734250, 9136266816"
+                    },
+                    {
+                        city: "Пермь",
+                        address: "Куйбышева, 128Б",
+                        name: "ФОРТУНА",
+                        type: "ТК",
+                        contact: "Фуркат",
+                        phone: "89641998373"
+                    },
+                    {
+                        city: "Питер",
+                        address: "Складской комплекс RAUM Бугры, 23км КАД, 5",
+                        name: "БАЙКАЛ СЕРВИС",
+                        type: "ТК",
+                        contact: "Сергей",
+                        phone: "8-921-950-59-54"
+                    },
+                    {
+                        city: "Ростов-на-Дону",
+                        address: "Каширская 5Б",
+                        name: "Байкал Сервис",
+                        type: "ТК",
+                        contact: "Александр, Станислав",
+                        phone: "89185583701, 89185543894"
+                    },
+                    {
+                        city: "Саратов",
+                        address: "станция Трофимовский 2, д.2а",
+                        name: "ТК Байкал сервис",
+                        type: "ТК",
+                        contact: "Антон",
+                        phone: "8 (906) 307-17-18"
+                    },
+                    {
+                        city: "Сургут",
+                        address: "ул.Индустриальная.38ст14",
+                        name: "Фортуна",
+                        type: "ТК",
+                        contact: "Диана",
+                        phone: "89527071056"
+                    },
+                    {
+                        city: "Тверь",
+                        address: "Бульвар Цанова, д.6",
+                        name: "Байкал сервис",
+                        type: "ТК",
+                        contact: "Нет данных",
+                        phone: "Нет данных"
+                    },
+                    {
+                        city: "Тюмень",
+                        address: "Авторемонтная 9",
+                        name: "Фортуна",
+                        type: "ТК",
+                        contact: "Анна, склад 6",
+                        phone: "8-922-04614-14"
+                    },
+                    {
+                        city: "Челябинск",
+                        address: "Индивидуальная 10",
+                        name: "Центральный склад",
+                        type: "Центральный склад",
+                        contact: "Сергей",
+                        phone: "8 993 933-21-74"
+                    }
+                ];
+
+                // --- СПИСОК АДРЕСОВ СЕРВИСОВ (Города исправлены) ---
+                const services = [
+                    {
+                        city: "Сургут",
+                        name: "Корея авто",
+                        contact: "Гайрат",
+                        phone: "89825553003",
+                        address: "Нефтеюганское шоссе 23/2",
+                        hours: "Ежедневно с 9 до 20, У Гайрата в четверг выходной",
+                        prices: [
+                            { name: "G4FC", cost: "18-21 т.р." },
+                            { name: "G4NA, КЕ,КД", cost: "25-28 т.р." }
+                        ],
+                        payment: "НАЛИЧНЫЕ",
+                        paymentAfterInstall: true // #31
+                    },
+                    {
+                        city: "Волгоград",
+                        name: "Сто34",
+                        contact: "Владимир",
+                        phone: "89608714676",
+                        address: "Переулок Семиполатенская 17",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC", cost: "20" },
+                            { name: "NA, KD, KE (все 4WD)", cost: "25 тыс." }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #3
+                    },
+                    {
+                        city: "Волжский",
+                        name: "Автосервис (Вячеслав)",
+                        contact: "Вячеслав",
+                        phone: "Нет данных",
+                        address: "Нет данных",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC", cost: "20000" },
+                            { name: "G4NA, KD", cost: "27000" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Волгоград",
+                        name: "Автосервис (Александр)",
+                        contact: "Александр",
+                        phone: "89053988712",
+                        address: "Нет данных",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC", cost: "15" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Уфа",
+                        name: "АЛЕКС МАСТЕР",
+                        contact: "АЛЬБЕРТ",
+                        phone: "89273130155",
+                        address: "АРАЛЬСКАЯ 23А",
+                        hours: "с 9 до 19, в выходные по договоренности",
+                        prices: [
+                            { name: "1.4-1.6 МКПП", cost: "24" },
+                            { name: "1.4-1.6 АКПП", cost: "27" },
+                            { name: "1.4-1.6 МКПП ПодРам", cost: "27" },
+                            { name: "1.4-1.6 АКПП ПодРам", cost: "29" },
+                            { name: "2.0-2.4", cost: "29" }
+                        ],
+                        payment: "НАЛИЧНЫЕ",
+                        paymentAfterInstall: true // #33
+                    },
+                    {
+                        city: "Пермь",
+                        name: "Автосервис мотор 59",
+                        contact: "Фуркат",
+                        phone: "89641998373",
+                        address: "Архитектора Свиязева 39/1",
+                        hours: "ежедневно",
+                        prices: [
+                            { name: "G4FC/ФА (солярис, рио, сид)", cost: "25000" },
+                            { name: "Оптима", cost: "30000" },
+                            { name: "G4КD, G4NA, КЕ", cost: "35000" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #24
+                    },
+                    {
+                        city: "Магнитогорск",
+                        name: "Сервис Фикс поинт",
+                        contact: "Рамиль(Роман)",
+                        phone: "89525118324",
+                        address: "Мостовой проезд, 17",
+                        hours: "с 10-20, вс выходной. У дяди СЕРЕЖИ",
+                        prices: [
+                            { name: "G4FC (солярис, рио)", cost: "20" },
+                            { name: "G4КD, G4NA, КЕ 2wd", cost: "25000-27000" },
+                            { name: "G4КD, G4NA, КЕ 4wd", cost: "27000-30000" },
+                            { name: "Сид с подрамником", cost: "23-25 тыс" }
+                        ],
+                        payment: "НАЛИЧНЫЕ",
+                        paymentAfterInstall: true // #15
+                    },
+                    {
+                        city: "Нижневартовск",
+                        name: "Корея авто",
+                        contact: "Нет данных",
+                        phone: "83466293333",
+                        address: "Индустриальная 95Б,стр 3",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC", cost: "25" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Екатеринбург",
+                        name: "Азия Сервис",
+                        contact: "Мухаммед",
+                        phone: "79995661001",
+                        address: "Чемпионов 13А",
+                        hours: "10:00 до 22:00 , ПТ выходной",
+                        prices: [
+                            { name: "G4FC", cost: "15" },
+                            { name: "2.0-2.4 2wd АКПП", cost: "25" },
+                            { name: "2.0-2.4 2wd МКПП", cost: "25" },
+                            { name: "2.0-2.4 4wd АКПП", cost: "25" },
+                            { name: "2.0-2.4 4wd МКПП", cost: "30" }
+                        ],
+                        payment: "НАЛИЧНЫЕ",
+                        paymentAfterInstall: true // #11
+                    },
+                    {
+                        city: "Набережные Челны",
+                        name: "Автосервис (Юрий)",
+                        contact: "Юрий",
+                        phone: "79196333336",
+                        address: "ул. Центральная ,81",
+                        hours: "с 8 до 18. Вс с 8 до 17.",
+                        prices: [
+                            { name: "G4NA KD KE", cost: "27" },
+                            { name: "CFN", cost: "23000" }
+                        ],
+                        payment: "НАЛИЧНЫЕ",
+                        paymentAfterInstall: true // #19
+                    },
+                    {
+                        city: "Челябинск",
+                        name: "Автоимпорт",
+                        contact: "Сергей",
+                        phone: "89226332174",
+                        address: "Индивидуальная,10",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "FC, FA (солярис,рио без подрамника)", cost: "20 тр" }
+                        ],
+                        payment: "НАЛИЧНЫЕ",
+                        paymentAfterInstall: true // #34
+                    },
+                    {
+                        city: "Новый Уренгой",
+                        name: "СИБ Авто",
+                        contact: "Азим",
+                        phone: "8922 0571608",
+                        address: "ул. Таежная 137",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC", cost: "20 (25-газ)" },
+                            { name: "2.0, 2.4", cost: "35 тыс (40-газ)" },
+                            { name: "G4FC, G4FA (с подрамником)", cost: "30000" },
+                            { name: "G4NA, G4NA NEW, G4KE 4х4", cost: "40 тыс (45-газ)" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #21
+                    },
+                    {
+                        city: "Казань",
+                        name: "СТО (Тимур)",
+                        contact: "Тимур",
+                        phone: "+79172581838",
+                        address: "Васильченко 37",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC, ФА", cost: "15" },
+                            { name: "G4NA KD KE (перед.)", cost: "20" },
+                            { name: "G4NA KD KE (полный)", cost: "25" },
+                            { name: "Матиз", cost: "25" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #13
+                    },
+                    {
+                        city: "Казань",
+                        name: "СТО (Ильнас)",
+                        contact: "Ильнас",
+                        phone: "89196888090",
+                        address: "СНТ Азино 106 а",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC (акпп)", cost: "10" },
+                            { name: "G4FC (механ)", cost: "14" },
+                            { name: "G4NA,КЕ, КД", cost: "17-18" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Омск",
+                        name: "АЛЬФА МОТОРС",
+                        contact: "Юрий (89658734250), Денис (9136266816)",
+                        phone: "89658734250, 9136266816",
+                        address: "г.Омск СТ Амурский 11-я аллея, 19",
+                        hours: "Лучше Юрию звонить, Денис там редко бывает",
+                        prices: [
+                            { name: "G4FC", cost: "18 тр" },
+                            { name: "G4NA,КЕ, КД", cost: "20 тр" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #22
+                    },
+                    {
+                        city: "Ростов-на-Дону",
+                        name: "Автосервис (Александр, Станислав)",
+                        contact: "Александр (89185583701), Станислав (89185543894)",
+                        phone: "89185583701, 89185543894",
+                        address: "Фестивальная 12а",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC, ФА, FG", cost: "25" },
+                            { name: "G4NA,КЕ, КД (полный)", cost: "25" },
+                            { name: "G4NA,КЕ, КД (передний)", cost: "20" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #26
+                    },
+                    {
+                        city: "Астрахань",
+                        name: "Автосервис (Евгений)",
+                        contact: "Евгений",
+                        phone: "89053628830",
+                        address: "Площадь Заводская 94а",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC", cost: "20 тр" },
+                            { name: "G4NA,КЕ, КД", cost: "?" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #1
+                    },
+                    {
+                        city: "Москва",
+                        name: "СТО (Юрий)",
+                        contact: "Юрий",
+                        phone: "79067495961",
+                        address: "2 магистральная 10 стр 1",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC, G4FА (автомат)", cost: "25тр" },
+                            { name: "G4FC, G4FА, FG (механика)", cost: "25тр" },
+                            { name: "G4NA,КЕ, КД (передний)", cost: "30тр" },
+                            { name: "G4NA,КЕ, КД (полный)", cost: "35 тр" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #17
+                    },
+                    {
+                        city: "Москва (Балашиха)",
+                        name: "СТО (Игорь)",
+                        contact: "Игорь",
+                        phone: "79099822490",
+                        address: "Балашиха, квартал щитникова38",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC", cost: "30" },
+                            { name: "G4NA,КЕ, КД", cost: "Нет данных" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Батайск (Ростов-на-Дону)",
+                        name: "Автосервис (Аслан)",
+                        contact: "Аслан",
+                        phone: "89514939308",
+                        address: "г.Батайск ДНТ ТРУД 14 Линия Дом 1266 (Сервис в 10 км от РОСТОВА)",
+                        copyAddress: "г.Батайск ДНТ ТРУД 14 Линия Дом 1266",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC, FA, FG", cost: "25-30" },
+                            { name: "G4NA,КЕ, КД, G4КЕ", cost: "Нет данных" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #2
+                    },
+                    {
+                        city: "Пенза",
+                        name: "СТО Carservise58",
+                        contact: "Александр",
+                        phone: "89374084376",
+                        address: "ул. Строителей, 18",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC", cost: "15" },
+                            { name: "Сид с подрамником", cost: "22" },
+                            { name: "G4NA,КЕ, КД 4WD", cost: "30" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Ижевск",
+                        name: "MPService",
+                        contact: "Павел",
+                        phone: "89022752656",
+                        address: "Проезд Дзержинского 2",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC", cost: "30" },
+                            { name: "Сид с подрамником", cost: "35" },
+                            { name: "G4NA,КЕ, КД 4WD", cost: "45" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Саратов",
+                        name: "СТО (Антон)",
+                        contact: "Антон",
+                        phone: "8 (906) 307-17-18",
+                        address: "Трофимовский - 2, д 9/3",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC, FA, FG", cost: "16" },
+                            { name: "Сид с подрамником", cost: "Нет данных" },
+                            { name: "G4NA,КЕ, КД 4WD", cost: "Нет данных" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Санкт-Петербург",
+                        name: "СТО Автор +",
+                        contact: "Сергей",
+                        phone: "89219505954",
+                        address: "ул. Минеральная д 13 литер \"О\"",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC, FA, FG", cost: "40000" },
+                            { name: "G4NA,КЕ, КД", cost: "45000" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #27
+                    },
+                    {
+                        city: "Санкт-Петербург",
+                        name: "Новый сервис (по рекомендации)",
+                        contact: "Руслан",
+                        phone: "89214265593",
+                        address: "Уманский пер. д 78, Красногвардейский р-н",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC, FA, FG", cost: "45000" },
+                            { name: "G4NA,КЕ, КД", cost: "Нет данных" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Воронеж",
+                        name: "СТО (Сергей)",
+                        contact: "Сергей",
+                        phone: "89103488212",
+                        address: "Тамбовский Переулок 13",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "Матиз, G4FA, G4FC (без подрамника)", cost: "25000" },
+                            { name: "G4FA, G4FC (с подрамником)", cost: "30000" },
+                            { name: "G4NA, G4KD G4KE (передний)", cost: "30000" },
+                            { name: "G4NA, G4KD G4KE (4X4)", cost: "35000-40000" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #6
+                    },
+                    {
+                        city: "Махачкала",
+                        name: "СТО (Минатула)",
+                        contact: "Минатула",
+                        phone: "8 963 416-06-95",
+                        address: "Сулевкентская 39 по Яндекс навигатору",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FA, G4FC", cost: "18 000" },
+                            { name: "G4NA, G4KD G4KE (передний)", cost: "20 000" },
+                            { name: "G4NA, G4KD G4KE (4X4 автомат)", cost: "25 000" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Челябинск",
+                        name: "StopLine (АВТО-ЭЛЕКТРИК)",
+                        contact: "Сергей Электрик",
+                        phone: "89681281807",
+                        address: "Орджоникидзе 43/2",
+                        hours: "АВТО-ЭЛЕКТРИК",
+                        prices: [],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false // #36
+                    },
+                    {
+                        city: "Челябинск",
+                        name: "Avto stimul",
+                        contact: "Фаррух",
+                        phone: "89507345014",
+                        address: "ПРОФИНТЕРНА 40",
+                        hours: "ПЯТНИЦА ВЫХОДНОЙ",
+                        prices: [
+                            { name: "FC, FA", cost: "18-20" },
+                            { name: "G4NA, G4KD G4KE", cost: "20-23" },
+                            { name: "F16D3", cost: "18" },
+                            { name: "CFN", cost: "18-20" }
+                        ],
+                        payment: "НАЛИЧНЫЕ",
+                        paymentAfterInstall: true // #35
+                    },
+                    {
+                        city: "Старый Уренгой",
+                        name: "ИП Корсуков",
+                        contact: "Михаил Геннадьевич",
+                        phone: "89224577203",
+                        address: "Старый Уренгой",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "FC, FA", cost: "28000 (подрамник 33000)" },
+                            { name: "G4NA, G4KD", cost: "35000 (4x4 40000)" },
+                            { name: "G4KE", cost: "35000 (4x4 40000)" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Тюмень",
+                        name: "МоторТех",
+                        contact: "Алексей",
+                        phone: "89129238758",
+                        address: "ул. Щербакова, 170, стр. 7",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC,G4FA,CFN", cost: "23 т.р. (без подр), 25 т.р. (с подр)" },
+                            { name: "G4NA, G4KD", cost: "30 т.р. (полный привод тоже)" },
+                            { name: "G4KE, CDA SCOUT (4Х4)", cost: "35 т.р." },
+                            { name: "CDA", cost: "30 т.р." },
+                            { name: "F8CV", cost: "25 т.р." }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: true // #8
+                    },
+                    {
+                        city: "Магнитогорск",
+                        name: "STUTTGART",
+                        contact: "Александр",
+                        phone: "89642485570",
+                        address: "Московская 50",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC G4FA", cost: "36000" },
+                            { name: "G4NA, G4KD", cost: "40000" },
+                            { name: "KE", cost: "Уточнять" },
+                            { name: "CFN, CWV, CDA, CAV", cost: "40000-50000" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Кстово",
+                        name: "Точка Ремонта",
+                        contact: "Евгений",
+                        phone: "89092870259",
+                        address: "проспект Капитана Рачкова 23/3",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC, G4FA, СFN", cost: "33000-35000" },
+                            { name: "G4NA, G4KD", cost: "40000" },
+                            { name: "G4KE, CDA 4х4", cost: "45000" },
+                            { name: "CDA", cost: "40000" },
+                            { name: "F8CV", cost: "35000" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Краснодар (ст. Новотиторовская)",
+                        name: "Pavservice",
+                        contact: "Александр",
+                        phone: "89615158180",
+                        address: "Станица Новотиторовская улица Ленина 243",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "G4FC, G4FA (без подр)", cost: "18000" },
+                            { name: "G4FC, G4FA (с подр)", cost: "23000" },
+                            { name: "G4NA, G4KD", cost: "30000" },
+                            { name: "G4KE", cost: "30000-35000" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Буранный (Магнитогорск)",
+                        name: "Автосервис на Буранном",
+                        contact: "Сергей",
+                        phone: "89193576168",
+                        address: "улица Мичурина 33/1",
+                        hours: "Нет данных",
+                        prices: [
+                            { name: "Солярис, Рио, Сид, Серато", cost: "15-17" },
+                            { name: "G4NA, G4KD, G4KE", cost: "запрашивать" }
+                        ],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    },
+                    {
+                        city: "Сургут",
+                        name: "\"Кореец\"",
+                        contact: "Нет данных",
+                        phone: "Нет данных",
+                        address: "Профсоюзов, 49",
+                        hours: "Нет данных",
+                        prices: [],
+                        payment: "Нет данных",
+                        paymentAfterInstall: false
+                    }
+                ];
+                // --- КОНЕЦ СПИСКОВ ---
+
+                // Сортируем сервисы по городу
+                services.sort((a, b) => a.city.localeCompare(b.city, 'ru'));
+                // Сортируем адреса хранения по городу
+                locations.sort((a, b) => a.city.localeCompare(b.city, 'ru'));
+                
+                const locationsContainer = document.getElementById('locationsContainer');
+                const servicesContainer = document.getElementById('servicesContainer');
+                const searchBox = document.getElementById('searchBox');
+                const tabsContainer = document.getElementById('tabs');
+                const noResultsDisplay = document.getElementById('noResults');
+
+                if (!locationsContainer || !servicesContainer || !searchBox || !tabsContainer || !noResultsDisplay) {
+                    throw new Error("Не найдены основные элементы страницы.");
+                }
+                
+                let activeTab = 'locations'; // 'locations' или 'services'
+
+                // Словарь для цветов меток
+                const typeColors = {
+                    "ТК": "bg-blue-100 text-blue-800",
+                    "Склад": "bg-yellow-100 text-yellow-800",
+                    "Центральный склад": "bg-orange-100 text-orange-800",
+                    "default": "bg-gray-100 text-gray-800"
+                };
+
+                // --- ИКОНЫ (Inline SVG) ---
+                const ICONS = {
+                    location: `<svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.1.4-.22.653-.36.253-.14.555-.315.905-.519.35-.203.754-.45 1.198-.74l.056-.037A13.883 13.883 0 0015.5 14.89c.81-.63.153-3.858-.542-6.536a6.34 6.34 0 00-4.04-4.24C7.513 3.566 4.72 5.06 3.42 7.749c-.81 1.688-.54 4.34.42 5.992A13.97 13.97 0 006.4 16.14l.057.037c.444.29.848.538 1.198.74.35.204.652.379.905.52.253.14.467.26.653.36a5.743 5.743 0 00.28.14l.019.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd" /></svg>`,
+                    user: `<svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.095a1.23 1.23 0 00.41-1.412A9.994 9.994 0 0010 12c-2.31 0-4.438.784-6.131 2.095z" /></svg>`,
+                    phone: `<svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.578a1.5 1.5 0 01-1.052 1.767l-.121.041c-.11.037-.22.08-.328.129C5.212 9.28 4.93 9.638 4.71 9.991l-.014.023a1.5 1.5 0 00.25 1.994l2.5 2.5c.667.667 1.706.843 2.508.437l.023-.014c.353-.22.711-.502 1.072-.618.1.048.21.092.328.129l.121.041a1.5 1.5 0 011.052 1.767l-.716 3.578A1.5 1.5 0 0115.352 18H14.5a1.5 1.5 0 01-1.5-1.5v-1.392c0-.294-.063-.579-.181-.84l-.06-.131c-.18-.396-.448-.75-.768-1.051l-.131-.13c-.301-.32-.655-.588-1.051-.768l-.131-.06c-.261-.118-.546-.181-.84-.181h-1.392A1.5 1.5 0 015.5 10V8.5a1.5 1.5 0 011.5-1.5h1.392c.294 0 .579.063.84.181l.131.06c.396.18.75.448 1.051.768l.13.131c.32.301.588.655.768 1.051l.06.131c.118.261.181.546.181.84V12.5A1.5 1.5 0 0112.5 14h-1.392c-.294 0-.579-.063-.84-.181l-.131-.06c-.396-.18-.75-.448-1.051-.768l-.13-.131c-.32-.301-.588-.655-.768-1.051l-.06-.131A1.5 1.5 0 018 9.5V5.5A1.5 1.5 0 019.5 4h1.392c.294 0 .579.063.84.181l.131.06c.396.18.75.448 1.051.768l.13.131c.32.301.588.655.768 1.051l.06.131A1.5 1.5 0 0114 8v1.5a1.5 1.5 0 01-1.5-1.5H11.5a1.5 1.5 0 01-1.5-1.5V8a1.5 1.5 0 01-1.175-1.465l-3.578-.716A1.5 1.5 0 013.5 4h-1A1.5 1.5 0 011 5.5v1A1.5 1.5 0 012.5 8h1a1.5 1.5 0 011.5 1.5v1.392c0 .294.063.579.181.84l.06.131c.18.396.448.75.768 1.051l.131.13c.301.32.655.588 1.051.768l.131.06c.261.118.546.181.84.181h1.392A1.5 1.5 0 0111.5 16v1.5a1.5 1.5 0 01-1.5 1.5h-1a1.5 1.5 0 01-1.5-1.5v-1a1.5 1.5 0 01-1.5-1.5h-1A1.5 1.5 0 012 11.5v-1A1.5 1.5 0 013.5 9h1A1.5 1.5 0 016 7.5V6.108c0-.294-.063-.579-.181-.84l-.06-.131c-.18-.396-.448-.75-.768-1.051l-.131-.13C4.559 3.656 4.205 3.388 3.809 3.21l-.131-.06A1.5 1.5 0 013.5 3H2V1.5A1.5 1.5 0 013.5 0h1.148a1.5 1.5 0 011.465 1.175l.716 3.578a1.5 1.5 0 01-1.052 1.767l-.121.041c-.11.037-.22.08-.328.129C5.212 7.28 4.93 7.638 4.71 7.991l-.014.023A1.5 1.5 0 005.25 9.994l2.5 2.5c.667.667 1.706.843 2.508.437l.023-.014c.353-.22.711-.502 1.072-.618.1.048.21.092.328.129l.121.041a1.5 1.5 0 011.052 1.767l-.716 3.578A1.5 1.5 0 0113.352 16H12.5a1.5 1.5 0 01-1.5-1.5v-1.392c0-.294.063-.579.181-.84l.06-.131c.18-.396.448-.75.768-1.051l.131-.13c.301-.32.655-.588 1.051-.768l.131-.06c.261-.118.546-.181.84-.181h1.392a1.5 1.5 0 011.5 1.5V14.5a1.5 1.5 0 01-1.5 1.5h-1a1.5 1.5 0 01-1.5-1.5v-1a1.5 1.5 0 011.5-1.5h1a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5h-1a1.5 1.5 0 01-1.5-1.5V14.5A1.5 1.5 0 0112.5 13h1.392c.294 0 .579-.063.84-.181l.131-.06c.396-.18.75-.448 1.051-.768l.13-.131c.32-.301.588-.655.768-1.051l.06-.131A1.5 1.5 0 0118 9.5V8a1.5 1.5 0 01-1.5-1.5H15.5a1.5 1.5 0 01-1.5-1.5V4a1.5 1.5 0 011.175-1.465l3.578-.716A1.5 1.5 0 0120 3.5v1A1.5 1.5 0 0118.5 6h-1A1.5 1.5 0 0116 7.5v1.392c0 .294-.063-.579-.181-.84l-.06.131c-.18-.396-.448-.75-.768-1.051l-.131.13c-.301.32-.655.588-1.051-.768l-.131-.06c-.261-.118-.546-.181-.84-.181H11.5A1.5 1.5 0 0110 10V8.5a1.5 1.5 0 01-1.5-1.5h-1A1.5 1.5 0 016 5.5V4.108c0-.294.063-.579.181-.84l-.06-.131c-.18-.396-.448-.75-.768-1.051l-.131-.13C4.559 1.656 4.205 1.388 3.809 1.21l-.131-.06A1.5 1.5 0 013.5 1H10V2.5A1.5 1.5 0 018.5 4h-1A1.5 1.5 0 016 5.5v1A1.5 1.5 0 014.5 8h-1A1.5 1.5 0 012 6.5v-1A1.5 1.5 0 013.5 4h1a1.5 1.5 0 011.5 1.5v1.392c0 .294-.063-.579-.181.84l-.06.131c-.18-.396-.448-.75-.768 1.051l-.131.13c-.301.32-.655.588-1.051-.768l-.131-.06A1.5 1.5 0 015.5 11H4.108c-.294 0-.579.063-.84.181l-.131.06c-.396-.18-.75-.448-1.051.768l-.13.131C1.656 12.441 1.388 12.795 1.21 13.191l-.06.131A1.5 1.5 0 011 13.5V12a1.5 1.5 0 011.5-1.5h1A1.5 1.5 0 015 12v1.5a1.5 1.5 0 01-1.5 1.5H2.5A1.5 1.5 0 011 13.5v-1A1.5 1.5 0 012.5 11h1A1.5 1.5 0 015 12.5v1.392c0 .294-.063-.579-.181.84l-.06.131c-.18-.396-.448-.75-.768 1.051l-.131.13c-.301.32-.655.588-1.051-.768l-.131-.06A1.5 1.5 0 012.5 17H1V15.5A1.5 1.5 0 012.5 14h1A1.5 1.5 0 015 15.5v1.392c0 .294.063.579.181.84l.06.131c.18.396.448.75.768 1.051l.131.13c.301.32.655.588 1.051.768l.131.06c.261.118.546.181.84.181h1.392A1.5 1.5 0 0111.5 18H10a1.5 1.5 0 01-1.5-1.5v-1a1.5 1.5 0 011.5-1.5h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H11.5a1.5 1.5 0 01-1.5-1.5v-1a1.5 1.5 0 011.5-1.5h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5h-1.5a1.5 1.5 0 01-1.5-1.5V15.5A1.5 1.5 0 0110 14h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H11.5a1.5 1.5 0 01-1.5-1.5V15.5A1.5 1.5 0 0110 14h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10A1.5 1.5 0 018.5 18v-1.5A1.5 1.5 0 0110 15h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10A1.5 1.5 0 018.5 18v-1.5A1.5 1.5 0 0110 15h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10A1.5 1.5 0 018.5 18v-1.5A1.5 1.5 0 0110 15h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10a1.5 1.5 0 01-1.5-1.5v-1A1.5 1.5 0 0110 14h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10a1.5 1.5 0 01-1.5-1.5v-1A1.5 1.5 0 0110 14h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10A1.5 1.5 0 018.5 18v-1.5A1.5 1.5 0 0110 15h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10A1.5 1.5 0 018.5 18v-1.5A1.5 1.5 0 0110 15h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10a1.5 1.5 0 01-1.5-1.5v-1A1.5 1.5 0 0110 14h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10a1.5 1.5 0 01-1.5-1.5v-1A1.5 1.5 0 0110 14h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10A1.5 1.5 0 018.5 18v-1.5A1.5 1.5 0 0110 15h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10A1.5 1.5 0 018.5 18v-1.5A1.5 1.5 0 0110 15h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10a1.5 1.5 0 01-1.5-1.5v-1A1.5 1.5 0 0110 14h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H10a1.5 1.5 0 01-1.5-1.5v-1a1.5 1.5 0 011.5-1.5H10zM2 3.5v-1z" clip-rule="evenodd" /></svg>`,
+                    clock: `<svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" /></svg>`,
+                    check: `<svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>`,
+                    copy: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 018.5 2h5.793a1.5 1.5 0 011.06.44l3.25 3.25a1.5 1.5 0 01.44 1.06V16.5A1.5 1.5 0 0117.5 18h-9A1.5 1.5 0 017 16.5v-13z" /><path d="M5 6.5A1.5 1.5 0 016.5 5h3a.75.75 0 000-1.5h-3A2.5 2.5 0 004 6v10.5A2.5 2.5 0 006.5 19h9a2.5 2.5 0 002.5-2.5v-3a.75.75 0 00-1.5 0v3A1.5 1.5 0 0115.5 18h-9A1.5 1.5 0 015 16.5v-10z" /></svg>`
+                };
+
+                // --- Функция отрисовки АДРЕСОВ ХРАНЕНИЯ (ИЗМЕНЕНО) ---
+                function renderLocations() {
+                    locationsContainer.innerHTML = '';
+                    
+                    locations.forEach(location => {
+                        const card = document.createElement('div');
+                        card.className = `location-card bg-white p-5 rounded-lg shadow-md border border-gray-200`;
+                        
+                        const colors = typeColors[location.type] || typeColors["default"];
+                        const addressToCopy = location.copyAddress || location.address;
+                        const contactToCopy = `${location.contact} ${location.phone}`;
+
+                        card.innerHTML = `
+                            <div class="flex items-center mb-3 pb-3 border-b border-gray-200">
+                                <h2 class="text-xl font-semibold text-gray-900">${location.city}</h2>
+                                <span class="ml-3 px-2.5 py-0.5 rounded-full text-xs font-medium ${colors}">
+                                    ${location.type}
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-0.5">${ICONS.location}</div>
+                                        <div class="ml-3 flex-1">
+                                            <span class="text-gray-800">${location.address}</span>
+                                            <br>
+                                            <span class="text-gray-500 text-sm">${location.name}</span>
+                                        </div>
+                                    </div>
+                                    <button class="copy-btn copy-btn-icon flex-shrink-0 ml-2" data-clipboard-text="${addressToCopy}">
+                                        ${ICONS.copy}
+                                        Копировать
+                                    </button>
+                                </div>
+                                
+                                ${location.contact && location.contact !== 'Нет данных' ? `
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-0.5">${ICONS.user}</div>
+                                        <div class="ml-3 flex-1">
+                                            <span class="text-gray-800">${location.contact}</span>
+                                            ${location.phone && location.phone !== 'Нет данных' ? `<br><span class="text-gray-800">${location.phone}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    ${location.phone && location.phone !== 'Нет данных' ? `
+                                    <button class="copy-btn copy-btn-icon flex-shrink-0 ml-2" data-clipboard-text="${contactToCopy}">
+                                        ${ICONS.copy}
+                                        Копировать
+                                    </button>
+                                    ` : ''}
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                        
+                        locationsContainer.appendChild(card);
+                    });
+                }
+
+                // --- Функция отрисовки АДРЕСОВ СЕРВИСОВ ---
+                function renderServices() {
+                    servicesContainer.innerHTML = '';
+
+                    services.forEach(service => {
+                        const bgColor = service.paymentAfterInstall 
+                            ? 'bg-green-50 border-green-200' // Светло-зеленый фон
+                            : 'bg-yellow-50 border-yellow-200';   // Светло-желтый фон
+
+                        const card = document.createElement('div');
+                        card.className = `service-card p-5 rounded-lg shadow-md border ${bgColor}`;
+                        
+                        const addressToCopy = service.copyAddress || service.address;
+                        const phoneToCopy = service.phone;
+
+                        // Форматируем список цен
+                        let pricesHtml = '';
+                        if (service.prices.length > 0) {
+                            pricesHtml = service.prices.map(price => {
+                                return `
+                                    <li class="flex justify-between items-center py-1 border-b border-gray-200 last:border-b-0">
+                                        <span class="text-gray-700">${price.name}</span>
+                                        <span class="text-gray-900 font-medium">${price.cost}</span>
+                                    </li>
+                                `;
+                            }).join('');
+                        } else {
+                            pricesHtml = '<li>Нет данных по ценам</li>';
+                        }
+                        
+                        // Форматируем контакты и телефоны
+                        let contactHtml = `<span class="text-gray-800">${service.contact || 'Нет данных'}</span>`;
+                        let phoneCopyButtonHtml = '';
+                        
+                        if (service.phone && service.phone !== "Нет данных") {
+                            // Если контакт содержит номер, не дублируем
+                            if (service.contact && !service.contact.includes(service.phone.split(',')[0])) { // Проверяем по первому номеру
+                                contactHtml += `<span class="text-gray-500 mx-2">|</span><span class="text-gray-800">${service.phone}</span>`;
+                            }
+                            phoneCopyButtonHtml = `
+                                <button class="copy-btn copy-btn-icon flex-shrink-0 ml-2" data-clipboard-text="${service.contact} ${phoneToCopy}">
+                                    ${ICONS.copy}
+                                    Копировать
+                                </button>`;
+                        }
+
+
+                        card.innerHTML = `
+                            <div class="flex flex-col">
+                                <!-- Заголовок -->
+                                <div class="mb-4 pb-4 border-b border-gray-200">
+                                    <h2 class="text-xl font-semibold text-gray-900">${service.city}</h2>
+                                    <p class="text-gray-600 text-lg">${service.name}</p>
+                                </div>
+
+                                <!-- Детали -->
+                                <div class="space-y-4 mb-5">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-start">
+                                            <div class="flex-shrink-0 pt-0.5">${ICONS.location}</div>
+                                            <div class="ml-3 flex-1">
+                                                <span class="text-gray-800">${service.address}</span>
+                                            </div>
+                                        </div>
+                                        <button class="copy-btn copy-btn-icon flex-shrink-0 ml-2" data-clipboard-text="${addressToCopy}">
+                                            ${ICONS.copy}
+                                            Копировать
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-start">
+                                            <div class="flex-shrink-0 pt-0.5">${ICONS.user}</div>
+                                            <div class="ml-3 flex-1">
+                                                ${contactHtml}
+                                            </div>
+                                        </div>
+                                        ${phoneCopyButtonHtml}
+                                    </div>
+                                    
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-0.5">${ICONS.clock}</div>
+                                        <div class="ml-3 flex-1">
+                                            <span class="text-gray-800">${service.hours}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-0.5">
+                                            <span class="text-lg">💰</span>
+                                        </div>
+                                        <div class="ml-3 flex-1">
+                                            ${service.payment === "НАЛИЧНЫЕ" ? `
+                                                <span class="flex items-center text-green-600 font-semibold">
+                                                    <span class="ml-1.5">НАЛИЧНЫЕ</span>
+                                                </span>
+                                            ` : `
+                                                <span class="text-gray-800">${service.payment}</span>
+                                            `}
+                                        </div>
+                                    </div>
+                                    
+                                    ${service.paymentAfterInstall ? `
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-0.5">${ICONS.check}</div>
+                                        <div class="ml-3 flex-1">
+                                            <span class="text-blue-600 font-medium">Оплата двигателя после установки</span>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                
+                                <!-- Цены -->
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                    <h4 class="text-base font-semibold text-gray-800 mb-2">Стоимость замены ДВС:</h4>
+                                    <ul class="text-sm list-none space-y-1 pl-0">
+                                        ${pricesHtml}
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                        
+                        servicesContainer.appendChild(card);
+                    });
+                }
+
+                // --- Общая функция отрисовки (ИСПРАВЛЕНО) ---
+                function renderActiveTab(filterText = '') {
+                    let hasResults = false;
+                    const normalizedFilter = filterText.toLowerCase().trim();
+                    
+                    if (activeTab === 'locations') {
+                        // Фильтруем locations
+                        let visibleCards = 0;
+                        locationsContainer.querySelectorAll('.location-card').forEach(card => {
+                            const city = card.querySelector('h2').textContent.toLowerCase();
+                            const isMatch = city.includes(normalizedFilter);
+                            // Используем 'hidden' (display: none)
+                            card.classList.toggle('hidden', !isMatch); 
+                            if (isMatch) visibleCards++;
+                        });
+                        hasResults = visibleCards > 0;
+                    } else {
+                        // Фильтруем services
+                        let visibleCards = 0;
+                        servicesContainer.querySelectorAll('.service-card').forEach(card => {
+                            const city = card.querySelector('h2').textContent.toLowerCase();
+                            const isMatch = city.includes(normalizedFilter);
+                            // Используем 'hidden' (display: none)
+                            card.classList.toggle('hidden', !isMatch);
+                            if (isMatch) visibleCards++;
+                        });
+                        hasResults = visibleCards > 0;
+                    }
+                    
+                    // Показываем "Ничего не найдено"
+                    noResultsDisplay.classList.toggle('hidden', hasResults);
+                }
+
+                // --- ОБРАБОТЧИКИ СОБЫТИЙ ---
+
+                // 1. Переключение табов
+                tabsContainer.addEventListener('click', (e) => {
+                    const tabButton = e.target.closest('button[data-tab]');
+                    if (!tabButton) return;
+
+                    const newTab = tabButton.dataset.tab;
+                    if (newTab === activeTab) return;
+                    
+                    activeTab = newTab;
+
+                    // Обновляем стили табов
+                    tabsContainer.querySelectorAll('button').forEach(btn => {
+                        btn.classList.toggle('active-tab', btn.dataset.tab === activeTab);
+                    });
+
+                    // Показываем/скрываем контейнеры
+                    locationsContainer.classList.toggle('hidden', activeTab !== 'locations');
+                    servicesContainer.classList.toggle('hidden', activeTab !== 'services');
+                    
+                    // Перерисовываем с текущим фильтром
+                    renderActiveTab(searchBox.value);
+                });
+
+                // 2. Поиск
+                searchBox.addEventListener('input', (e) => {
+                    renderActiveTab(e.target.value);
+                });
+
+                // 3. Копирование (один обработчик на оба контейнера)
+                document.body.addEventListener('click', function(e) {
+                    const copyButton = e.target.closest('.copy-btn');
+                    if (!copyButton) return;
+
+                    const textToCopy = copyButton.getAttribute('data-clipboard-text');
+                    
+                    const textarea = document.createElement('textarea');
+                    textarea.value = textToCopy;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-9999px';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        document.execCommand('copy');
+                        
+                        const toast = document.getElementById('toast');
+                        toast.classList.remove('opacity-0');
+                        
+                        const originalText = copyButton.innerHTML;
+                        copyButton.innerHTML = 'Скопировано!';
+                        copyButton.disabled = true;
+
+                        setTimeout(() => {
+                            toast.classList.add('opacity-0');
+                        }, 2000);
+                        
+                        setTimeout(() => {
+                            copyButton.innerHTML = originalText;
+                            copyButton.disabled = false;
+                        }, 1500);
+
+                    } catch (err) {
+                        console.error('Ошибка при копировании:', err);
+                    }
+                    
+                    document.body.removeChild(textarea);
+                });
+
+                // --- ПЕРВОНАЧАЛЬНАЯ ОТРИСОВКА (УПРОЩЕНО) ---
+                renderLocations(); 
+                renderServices();
+                renderActiveTab(); // Применяем фильтр (пустой) и скрываем/показываем нужные контейнеры
+            
+            } catch (e) {
+                // ... обработка ошибок ...
+                console.error("Произошла критическая ошибка:", e);
+                const errorDisplay = document.getElementById('errorDisplay');
+                const errorMessage = document.getElementById('errorMessage');
+                if (errorDisplay && errorMessage) {
+                    errorMessage.textContent = e.message;
+                    errorDisplay.classList.remove('hidden');
+                }
+                document.getElementById('locationsContainer').classList.add('hidden');
+                document.getElementById('servicesContainer').classList.add('hidden');
+                document.getElementById('searchBox').classList.add('hidden');
+            }
+        });
+    </script>
+
+</body>
+</html>
