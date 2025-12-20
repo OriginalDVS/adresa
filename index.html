@@ -15,11 +15,11 @@
 
         .tab-btn {
             transition: all 0.3s ease;
-            padding: 1.25rem 1rem;
+            padding: 1rem 0.75rem;
             color: #64748b;
             font-weight: 700;
-            border-bottom: 4px solid transparent;
-            font-size: 0.85rem;
+            border-bottom: 3px solid transparent;
+            font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
@@ -32,27 +32,24 @@
         .price-card {
             background-color: #f0f9ff;
             border: 1px solid #bae6fd;
-            border-radius: 1rem;
+            border-radius: 0.75rem;
         }
 
         .copy-action-btn {
             background-color: #ffffff;
             color: #4338ca;
-            padding: 0.5rem 0.8rem;
-            border-radius: 0.75rem;
-            font-size: 0.7rem;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.65rem;
             font-weight: 800;
             text-transform: uppercase;
-            border: 2px solid #e0e7ff;
+            border: 1px solid #e0e7ff;
             transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .copy-action-btn:hover {
-            border-color: #4338ca;
-            background-color: #f5f3ff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .copy-action-btn:active {
             transform: scale(0.95);
+            background-color: #f5f3ff;
         }
         
         .card-gradient-loc {
@@ -70,99 +67,99 @@
 </head>
 <body class="bg-slate-50 text-slate-900">
 
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-indigo-600 text-white py-3 px-8 rounded-2xl shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none text-sm font-bold uppercase tracking-widest">
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-indigo-600 text-white py-2 px-6 rounded-xl shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none text-xs font-bold uppercase tracking-widest">
         ✅ Скопировано
     </div>
 
-    <div class="max-w-2xl mx-auto px-4 py-10">
-        <header class="mb-10 text-center md:text-left">
-            <h1 class="text-5xl font-extrabold tracking-tighter text-slate-900">Наличие</h1>
-            <p class="text-indigo-600 font-bold mt-2 text-lg">Склады и профессиональные техцентры</p>
+    <div class="max-w-2xl mx-auto px-4 py-6">
+        <header class="mb-6">
+            <h1 class="text-3xl font-extrabold tracking-tighter text-slate-900">Наличие</h1>
+            <p class="text-indigo-600 font-bold mt-1 text-sm uppercase tracking-wide">Склады и техцентры</p>
         </header>
 
         <!-- Вкладки -->
-        <div class="flex border-b border-slate-200 mb-8 overflow-x-auto no-scrollbar whitespace-nowrap bg-white sticky top-0 z-10 rounded-t-2xl shadow-sm px-2">
+        <div class="flex border-b border-slate-200 mb-6 overflow-x-auto no-scrollbar whitespace-nowrap bg-white sticky top-0 z-10 rounded-t-xl shadow-sm">
             <button data-tab="locations" class="tab-btn active-tab flex-1">📦 Склады</button>
             <button data-tab="services" class="tab-btn flex-1">🛠 Сервисы</button>
         </div>
 
         <!-- Поиск -->
-        <div class="mb-10">
+        <div class="mb-6">
             <div class="relative">
-                <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                    <span class="text-2xl">🔍</span>
+                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <span class="text-lg">🔍</span>
                 </div>
                 <input 
                     type="text" 
                     id="searchBox"
-                    placeholder="В каком городе ищем?"
-                    class="w-full pl-16 pr-6 py-5 bg-white border-2 border-slate-200 rounded-3xl shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-xl font-bold placeholder-slate-300"
+                    placeholder="Город..."
+                    class="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-200 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-lg font-bold placeholder-slate-300"
                 >
             </div>
         </div>
 
         <!-- Контейнеры -->
-        <main id="locationsContainer" class="space-y-8"></main>
-        <main id="servicesContainer" class="space-y-8 hidden"></main>
+        <main id="locationsContainer" class="space-y-6"></main>
+        <main id="servicesContainer" class="space-y-6 hidden"></main>
         
         <!-- Сообщения об отсутствии -->
-        <div id="noLocs" class="hidden text-center py-24 bg-white rounded-[2.5rem] border-4 border-dashed border-slate-100 px-10">
-            <div class="text-5xl mb-6">📦❓</div>
-            <p class="font-black text-slate-800 text-xl uppercase mb-3">Склад не найден</p>
-            <p class="text-slate-500 font-semibold leading-relaxed">Посмотрите во вкладке <span class="text-indigo-600">«Сервисы»</span> или проверьте название города на ошибки.</p>
+        <div id="noLocs" class="hidden text-center py-16 bg-white rounded-3xl border-2 border-dashed border-slate-200 px-8">
+            <div class="text-4xl mb-4">📦❓</div>
+            <p class="font-black text-slate-800 text-base uppercase mb-2">Склад не найден</p>
+            <p class="text-slate-500 text-xs font-semibold leading-relaxed">Проверьте «Сервисы» или правильность названия города (без лишних знаков).</p>
         </div>
 
-        <div id="noSers" class="hidden text-center py-24 bg-white rounded-[2.5rem] border-4 border-dashed border-slate-100 px-10">
-            <div class="text-5xl mb-6">🛠❌</div>
-            <p class="font-black text-slate-800 text-xl uppercase mb-3">Нет сервиса в этом городе</p>
-            <p class="text-slate-500 font-semibold leading-relaxed">Попробуйте найти склад во вкладке <span class="text-indigo-600">«Склады»</span> или уточните город.</p>
+        <div id="noSers" class="hidden text-center py-16 bg-white rounded-3xl border-2 border-dashed border-slate-200 px-8">
+            <div class="text-4xl mb-4">🛠❌</div>
+            <p class="font-black text-slate-800 text-base uppercase mb-2">Нет сервиса в этом городе</p>
+            <p class="text-slate-500 text-xs font-semibold leading-relaxed">Попробуйте найти склад во вкладке «Склады» или уточните город.</p>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const locations = [
-                { city: "Астрахань", address: "Рождественского, дом 5 литера 18", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "Роман", phone: "8-937-508-88-10" },
+                { city: "Астрахань", address: "Рождественского, дом 5 литера 18", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "Роман", phone: "8-937-508-88-10" },
                 { city: "Волгоград", address: "улица Пожарского, 352, корпус 1", name: "Склад продукции", type: "Склад", contact: "", phone: "" },
-                { city: "Волгоград", address: "Имени Неждановой, дом 6/1", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Воронеж", address: "улица Димитрова, дом 154", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Ижевск", address: "улица Новоажимова 27", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Казань", address: "улица Восстания 100, строение 8300", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Краснодар", address: "улица Автомобильная 13", name: "Транспортная компания АТЭК", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Волгоград", address: "Имени Неждановой, дом 6/1", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Воронеж", address: "улица Димитрова, дом 154", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Ижевск", address: "улица Новоажимова 27", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Казань", address: "улица Восстания 100, строение 8300", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Краснодар", address: "улица Автомобильная 13", name: "ТК АТЭК", type: "Транспортная компания", contact: "", phone: "" },
                 { city: "Магнитогорск", address: "улица Калинина 18", name: "Региональный склад", type: "Склад", contact: "Сергей", phone: "89191200330" },
-                { city: "Махачкала", address: "Хаджи Булача дом 80", name: "Транспортная компания Новая Линия", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Москва", address: "улица Перовская 1, строение 2", name: "Транспортная компания СЛТК", type: "Транспортная компания", contact: "Людмила", phone: "+7 915 087-85-58" },
-                { city: "Нижний Новгород", address: "улица Вторчермета дом 1", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Нижневартовск", address: "Мира, 5/П строение 1", name: "Транспортная компания Фортуна Экспресс", type: "Транспортная компания", contact: "Диана", phone: "89527071056" },
-                { city: "Новый Уренгой", address: "Западная промзона, улица Таёжная, 204/8А", name: "Транспортная компания Фортуна", type: "Транспортная компания", contact: "Диана", phone: "89527071056" },
-                { city: "Омск", address: "улица 10 лет октября 217 корпус 2", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Пермь", address: "улица Куйбышева, 128Б", name: "Транспортная компания ФОРТУНА", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Санкт-Петербург", address: "23 километр КАД, 5", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Ростов-на-Дону", address: "улица Каширская 5Б", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Саратов", address: "станция Трофимовский 2, дом 2а", name: "Транспортная компания Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
-                { city: "Сургут", address: "улица Индустриальная 38 строение 14", name: "Транспортная компания Фортуна", type: "Транспортная компания", contact: "Диана", phone: "89527071056" },
-                { city: "Тюмень", address: "улица Авторемонтная 9", name: "Транспортная компания Фортуна", type: "Транспортная компания", contact: "Анна", phone: "8-922-04614-14" },
+                { city: "Махачкала", address: "Хаджи Булача дом 80", name: "ТК Новая Линия", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Москва", address: "улица Перовская 1, строение 2", name: "ТК СЛТК", type: "Транспортная компания", contact: "Людмила", phone: "+7 915 087-85-58" },
+                { city: "Нижний Новгород", address: "улица Вторчермета дом 1", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Нижневартовск", address: "Мира, 5/П строение 1", name: "ТК Фортуна Экспресс", type: "Транспортная компания", contact: "Диана", phone: "89527071056" },
+                { city: "Новый Уренгой", address: "улица Таёжная, 204/8А", name: "ТК Фортуна", type: "Транспортная компания", contact: "Диана", phone: "89527071056" },
+                { city: "Омск", address: "улица 10 лет октября 217 корпус 2", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Пермь", address: "улица Куйбышева, 128Б", name: "ТК ФОРТУНА", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Санкт-Петербург", address: "23 километр КАД, 5", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Ростов-на-Дону", address: "улица Каширская 5Б", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Саратов", address: "станция Трофимовский 2, дом 2а", name: "ТК Байкал-Сервис", type: "Транспортная компания", contact: "", phone: "" },
+                { city: "Сургут", address: "улица Индустриальная 38 строение 14", name: "ТК Фортуна", type: "Транспортная компания", contact: "Диана", phone: "89527071056" },
+                { city: "Тюмень", address: "улица Авторемонтная 9", name: "ТК Фортуна", type: "Транспортная компания", contact: "Анна", phone: "8-922-04614-14" },
                 { city: "Челябинск", address: "улица Сормовская 17", name: "Главный центральный склад", type: "Центральный склад", contact: "", phone: "" }
             ];
 
             const services = [
-                { city: "Сургут", name: "Корея авто", contact: "Гайрат", phone: "89825553003", address: "Нефтеюганское шоссе 23/2", hours: "с 9:00 до 20:00 ежедневно (Гайрат: четверг выходной)", prices: [{ n: "Двигатель G4FC", c: "18000 рублей (21000 с газовым оборудованием)" }, { n: "G4NA, KE, КД", c: "25000 рублей (28000 с газовым оборудованием)" }], paymentAfterInstall: true },
+                { city: "Сургут", name: "Корея авто", contact: "Гайрат", phone: "89825553003", address: "Нефтеюганское шоссе 23/2", hours: "с 9:00 до 20:00 ежедневно (Гайрат: четверг выходной)", prices: [{ n: "Двигатель G4FC", c: "18000 рублей (21000 с ГБО)" }, { n: "G4NA, KE, КД", c: "25000 рублей (28000 с ГБО)" }], paymentAfterInstall: true },
                 { city: "Волгоград", name: "Техцентр Сто34", contact: "Владимир", phone: "89608714676", address: "Переулок Семиполатенская 17", hours: "По предварительной записи", prices: [{ n: "Двигатель G4FC", c: "20000 рублей" }, { n: "NA, KD, KE (полный привод)", c: "25000 рублей" }], paymentAfterInstall: true },
-                { city: "Уфа", name: "АЛЕКС МАСТЕР", contact: "АЛЬБЕРТ", phone: "89273130155", address: "улица АРАЛЬСКАЯ 23А", hours: "9:00-19:00, выходные по договоренности", prices: [{ n: "1.4-1.6 механическая коробка", c: "24000 рублей" }, { n: "1.4-1.6 автоматическая коробка", c: "27000 рублей" }, { n: "1.4-1.6 автоматическая коробка + подрамник", c: "29000 рублей" }, { n: "Двигатели 2.0-2.4", c: "30000 рублей" }, { n: "Полный привод", c: "35000 рублей" }], paymentAfterInstall: true },
+                { city: "Уфа", name: "АЛЕКС МАСТЕР", contact: "АЛЬБЕРТ", phone: "89273130155", address: "улица АРАЛЬСКАЯ 23А", hours: "9:00-19:00, выходные по договоренности", prices: [{ n: "1.4-1.6 МКПП", c: "24000 рублей" }, { n: "1.4-1.6 АКПП", c: "27000 рублей" }, { n: "1.4-1.6 АКПП + подрамник", c: "29000 рублей" }, { n: "Двигатели 2.0-2.4", c: "30000 рублей" }, { n: "Полный привод", c: "35000 рублей" }], paymentAfterInstall: true },
                 { city: "Пермь", name: "Автосервис мотор 59", contact: "Фуркат", phone: "89641998373", address: "Свиязева 39/1", hours: "Ежедневно", prices: [{ n: "G4FC/FA (Solaris, Rio, Ceed)", c: "25000 рублей" }, { n: "Kia Optima / G4NA", c: "30000-35000 рублей" }], paymentAfterInstall: true },
-                { city: "Магнитогорск", name: "Фикс Поинт", contact: "Рамиль", phone: "89525118324", address: "Мостовой проезд 17", hours: "10:00-20:00 (воскресенье выходной)", prices: [{ n: "Двигатель G4FC", c: "20000 рублей" }, { n: "G4KD, NA, KE (передний/полный привод)", c: "25000-30000 рублей" }, { n: "Ceed с подрамником", c: "23-25 тысяч рублей" }], paymentAfterInstall: true },
-                { city: "Екатеринбург", name: "Азия Сервис", contact: "Мухаммед", phone: "79995661001", address: "Чемпионов 13А", hours: "10:00-22:00 (пятница выходной)", prices: [{ n: "Двигатель G4FC", c: "15000 рублей" }, { n: "2.0-2.4 (любой привод)", c: "25000-30000 рублей" }], paymentAfterInstall: true },
-                { city: "Набережные Челны", name: "Центральная СТО", contact: "Юрий", phone: "79196333336", address: "улица Центральная 81", hours: "8:00-18:00 (воскресенье до 17:00)", prices: [{ n: "FC/FA (без подрамника)", c: "23000 рублей" }, { n: "G4NA, KD, KE", c: "32000-35000 рублей" }, { n: "Matiz / Cruze", c: "20000-38000 рублей" }], paymentAfterInstall: true },
+                { city: "Магнитогорск", name: "Фикс Поинт", contact: "Рамиль", phone: "89525118324", address: "Мостовой проезд 17", hours: "10:00-20:00 (ВС выходной)", prices: [{ n: "Двигатель G4FC", c: "20000 рублей" }, { n: "G4KD, NA, KE (2WD / 4WD)", c: "25000-30000 рублей" }, { n: "Ceed с подрамником", c: "23-25 тысяч рублей" }], paymentAfterInstall: true },
+                { city: "Екатеринбург", name: "Азия Сервис", contact: "Мухаммед", phone: "79995661001", address: "Чемпионов 13А", hours: "10:00-22:00 (Пятница выходной)", prices: [{ n: "Двигатель G4FC", c: "15000 рублей" }, { n: "2.0-2.4 (любой привод)", c: "25000-30000 рублей" }], paymentAfterInstall: true },
+                { city: "Набережные Челны", name: "Центральная СТО", contact: "Юрий", phone: "79196333336", address: "улица Центральная 81", hours: "8:00-18:00 (ВС до 17:00)", prices: [{ n: "FC/FA (без подрамника)", c: "23000 рублей" }, { n: "G4NA, KD, KE", c: "32000-35000 рублей" }, { n: "Matiz / Cruze", c: "20000-38000 рублей" }], paymentAfterInstall: true },
                 { city: "Омск", name: "АЛЬФА МОТОРС", contact: "Юрий и Денис", phone: "89658734250 / 9136266816", address: "СТ Амурский, 11-я аллея, 19", hours: "Звонить заранее", prices: [{ n: "Двигатель G4FC", c: "18000 рублей" }, { n: "G4NA, КЕ, КД", c: "20000 рублей" }], paymentAfterInstall: true },
                 { city: "Ростов-на-Дону", name: "Автосервис", contact: "Александр и Станислав", phone: "89185583701 / 89185543894", address: "улица Фестивальная 12а", hours: "Не указано", prices: [{ n: "G4FC, FA, FG", c: "25000 рублей" }, { n: "G4NA, КЕ, КД (передний/полный)", c: "20000-25000 рублей" }], paymentAfterInstall: true },
-                { city: "Москва", name: "СТО Магистральная", contact: "Юрий", phone: "79067495961", address: "2-я Магистральная 10, строение 1", hours: "По записи", prices: [{ n: "G4FC/FA (автоматическая/механическая)", c: "25000 рублей" }, { n: "G4NA, КЕ, КД (передний/полный)", c: "30000-35000 рублей" }], paymentAfterInstall: true },
+                { city: "Москва", name: "СТО Магистральная", contact: "Юрий", phone: "79067495961", address: "2-я Магистральная 10, строение 1", hours: "По записи", prices: [{ n: "G4FC/FA (АКПП/МКПП)", c: "25000 рублей" }, { n: "G4NA, КЕ, КД (передний/полный)", c: "30000-35000 рублей" }], paymentAfterInstall: true },
                 { city: "Буранный (30 км от Магнитогорска)", name: "Автосервис", contact: "Сергей", phone: "89193576168", address: "улица Мичурина 33/1", hours: "30 км от Магнитогорска", prices: [{ n: "Solaris, Rio, Ceed, Cerato", c: "15000-17000 рублей" }, { n: "G4NA, KD, KE", c: "Уточняйте по стоимости" }], paymentAfterInstall: false },
                 { city: "Челябинск", name: "Avto stimul", contact: "Фаррух", phone: "89507345014", address: "ПРОФИНТЕРНА 40", hours: "Пятница выходной", prices: [{ n: "FC, FA", c: "18000-20000 рублей" }, { n: "G4NA, KD, KE", c: "20000-23000 рублей" }], paymentAfterInstall: true },
                 { city: "Тюмень", name: "МоторТех", contact: "Алексей", phone: "89129238758", address: "улица Щербакова 170, строение 7", hours: "По записи", prices: [{ n: "FC, FA, CFN", c: "23000-25000 рублей" }, { n: "G4NA, KD / G4KE", c: "30000-35000 рублей" }], paymentAfterInstall: true },
                 { city: "Воронеж", name: "Техцентр Сергей", contact: "Сергей", phone: "89103488212", address: "Тамбовский Переулок 13", hours: "Не указано", prices: [{ n: "Matiz, G4FC (без подрамника)", c: "25000 рублей" }, { n: "С подрамником / Полный привод", c: "30000-40000 рублей" }], paymentAfterInstall: true },
                 { city: "Санкт-Петербург", name: "СТО Автор+", contact: "Сергей", phone: "89219505954", address: "улица Минеральная, дом 13 лит О", hours: "Не указано", prices: [{ n: "G4FC, FA, FG", c: "40000 рублей" }, { n: "G4NA, КЕ, КД", c: "45000 рублей" }], paymentAfterInstall: true },
                 { city: "Волжский", name: "Автосервис (Вячеслав)", contact: "Вячеслав", phone: "Номер по запросу", address: "Уточняйте точный адрес у мастера", hours: "Не указано", prices: [{ n: "Двигатель G4FC", c: "20000 рублей" }, { n: "Двигатели G4NA, KD", c: "27000 рублей" }], paymentAfterInstall: false },
-                { city: "Казань", name: "СТО Мастер", contact: "Тимур", phone: "+79172581838", address: "улица Васильченко 37", hours: "Не указано", prices: [{ n: "G4FC, FA", c: "15000 рублей" }, { n: "NA, KD, KE", c: "20000-25000 рублей" }], paymentAfterInstall: true },
+                { city: "Казань", name: "СТО Мастер", contact: "Тимур", phone: "+79172581838", address: "Васильченко 37", hours: "Не указано", prices: [{ n: "G4FC, FA", c: "15000 рублей" }, { n: "NA, KD, KE", c: "20000-25000 рублей" }], paymentAfterInstall: true },
                 { city: "Махачкала", name: "СТО Минатула", contact: "Минатула", phone: "89634160695", address: "Сулевкентская 39", hours: "По Яндекс Навигатору", prices: [{ n: "G4FA, G4FC", c: "18000 рублей" }, { n: "NA, KD, KE (полный привод)", c: "20000-25000 рублей" }], paymentAfterInstall: false }
             ];
 
@@ -181,30 +178,30 @@
                     if (filter && !l.city.toLowerCase().includes(filter.toLowerCase())) return;
                     count++;
                     const card = document.createElement('div');
-                    card.className = "bg-white rounded-[2.5rem] border-2 border-indigo-100 shadow-xl overflow-hidden hover:border-indigo-300 transition-colors";
+                    card.className = "bg-white rounded-3xl border-2 border-indigo-100 shadow-lg overflow-hidden";
                     card.innerHTML = `
-                        <div class="card-gradient-loc p-6 flex justify-between items-center">
+                        <div class="card-gradient-loc p-4 flex justify-between items-center">
                             <div>
-                                <h3 class="font-extrabold text-2xl text-white uppercase tracking-tight">${l.city}</h3>
-                                <p class="text-[10px] text-indigo-200 font-black uppercase tracking-widest mt-1">Транзитный пункт</p>
+                                <h3 class="font-extrabold text-lg text-white uppercase tracking-tight">${l.city}</h3>
+                                <p class="text-[9px] text-indigo-200 font-black uppercase tracking-widest mt-0.5">Склад хранения</p>
                             </div>
-                            <span class="text-3xl">📦</span>
+                            <span class="text-2xl">📦</span>
                         </div>
-                        <div class="p-8 space-y-6">
-                            <div class="flex justify-between items-start gap-6">
+                        <div class="p-5 space-y-4">
+                            <div class="flex justify-between items-start gap-4">
                                 <div class="w-full">
-                                    <p class="text-[10px] font-black text-indigo-400 uppercase mb-1 tracking-tighter uppercase">Место получения</p>
-                                    <p class="text-xl font-bold text-slate-900 leading-snug">${l.address}</p>
-                                    <p class="text-sm text-slate-500 font-semibold mt-1">${l.name}</p>
+                                    <p class="text-[9px] font-black text-indigo-400 uppercase mb-1 tracking-tighter">Место получения</p>
+                                    <p class="text-base font-bold text-slate-900 leading-snug">${l.address}</p>
+                                    <p class="text-xs text-slate-500 font-semibold mt-1 italic">${l.name}</p>
                                 </div>
                                 <button class="copy-action-btn flex-shrink-0" onclick="copyText('${l.address}')">Копировать</button>
                             </div>
                             ${l.contact ? `
-                                <div class="pt-6 border-t-2 border-slate-50 flex justify-between items-end">
+                                <div class="pt-4 border-t-2 border-slate-50 flex justify-between items-end">
                                     <div>
-                                        <p class="text-[10px] font-black text-indigo-400 uppercase mb-1 tracking-tighter uppercase">Сотрудник склада</p>
-                                        <p class="font-black text-slate-900 text-2xl leading-none">${l.contact}</p>
-                                        <p class="text-indigo-600 font-black mt-2 text-xl">${l.phone}</p>
+                                        <p class="text-[9px] font-black text-indigo-400 uppercase mb-1 tracking-tighter">Сотрудник</p>
+                                        <p class="font-black text-slate-900 text-lg leading-none">${l.contact}</p>
+                                        <p class="text-indigo-600 font-black mt-1.5 text-base tracking-tight">${l.phone}</p>
                                     </div>
                                     <button class="copy-action-btn flex-shrink-0" onclick="copyText('${l.phone}')">Копировать</button>
                                 </div>
@@ -223,55 +220,55 @@
                     if (filter && !s.city.toLowerCase().includes(filter.toLowerCase())) return;
                     count++;
                     const card = document.createElement('div');
-                    card.className = "bg-white rounded-[2.5rem] border-2 border-slate-200 shadow-xl overflow-hidden hover:border-emerald-300 transition-colors";
+                    card.className = "bg-white rounded-3xl border-2 border-slate-200 shadow-lg overflow-hidden";
                     
                     const pRows = s.prices.map(p => `
-                        <div class="flex justify-between items-center py-3.5 border-b border-indigo-100 last:border-0 px-4">
-                            <span class="text-[11px] font-bold text-slate-600 uppercase w-3/5 leading-tight tracking-tight">${p.n}</span>
-                            <span class="text-sm font-black text-indigo-900 text-right whitespace-nowrap">${p.c}</span>
+                        <div class="flex justify-between items-center py-2.5 border-b border-indigo-100 last:border-0 px-3">
+                            <span class="text-[10px] font-bold text-slate-600 uppercase w-3/5 leading-tight tracking-tight">${p.n}</span>
+                            <span class="text-xs font-black text-indigo-900 text-right whitespace-nowrap">${p.c}</span>
                         </div>
                     `).join('');
 
                     const headerClass = s.paymentAfterInstall ? 'card-gradient-pay' : 'card-gradient-ser';
 
                     card.innerHTML = `
-                        <div class="p-6 ${headerClass} flex justify-between items-center">
+                        <div class="p-4 ${headerClass} flex justify-between items-center">
                             <div>
-                                <h3 class="font-extrabold text-2xl text-white uppercase tracking-tight">${s.city}</h3>
-                                <p class="text-[10px] font-black uppercase tracking-widest mt-1 text-white/70">${s.name}</p>
+                                <h3 class="font-extrabold text-lg text-white uppercase tracking-tight">${s.city}</h3>
+                                <p class="text-[9px] font-black uppercase tracking-widest mt-0.5 text-white/70">${s.name}</p>
                             </div>
                             ${s.paymentAfterInstall ? `
-                                <div class="bg-white text-emerald-700 px-4 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg">
-                                    <span class="text-[10px] font-black uppercase tracking-tighter italic">ОПЛАТА ПОСЛЕ</span>
+                                <div class="bg-white text-emerald-700 px-3 py-1 rounded-xl flex items-center gap-1 shadow-md">
+                                    <span class="text-[9px] font-black uppercase tracking-tighter italic">Оплата после</span>
                                 </div>
-                            ` : '<span class="text-3xl">🛠</span>'}
+                            ` : '<span class="text-xl">🛠</span>'}
                         </div>
-                        <div class="p-8 space-y-7">
-                            <div class="flex justify-between items-start gap-6">
+                        <div class="p-5 space-y-5">
+                            <div class="flex justify-between items-start gap-4">
                                 <div class="w-full">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-tighter uppercase">Где находится</p>
-                                    <p class="text-xl font-bold text-slate-900 leading-snug">${s.address}</p>
-                                    <p class="text-[13px] text-indigo-600 font-bold mt-3 flex items-center gap-2 uppercase italic bg-indigo-50 w-fit px-4 py-1.5 rounded-full">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1 tracking-tighter">Расположение</p>
+                                    <p class="text-base font-bold text-slate-900 leading-snug">${s.address}</p>
+                                    <p class="text-[11px] text-indigo-600 font-bold mt-2 flex items-center gap-2 uppercase italic bg-indigo-50 w-fit px-3 py-1 rounded-full">
                                         🕒 ${s.hours}
                                     </p>
                                 </div>
                                 <button class="copy-action-btn flex-shrink-0" onclick="copyText('${s.address}')">Копировать</button>
                             </div>
                             
-                            <div class="pt-6 border-t-2 border-slate-50 flex justify-between items-end">
+                            <div class="pt-4 border-t-2 border-slate-50 flex justify-between items-end">
                                 <div>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-tighter uppercase">Мастер техцентра</p>
-                                    <p class="font-black text-slate-900 text-2xl leading-none">${s.contact}</p>
-                                    <p class="text-indigo-700 font-black text-xl mt-2 tracking-tight">${s.phone}</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1 tracking-tighter">Мастер техцентра</p>
+                                    <p class="font-black text-slate-900 text-lg leading-none">${s.contact}</p>
+                                    <p class="text-indigo-700 font-black text-base mt-1.5 tracking-tight">${s.phone}</p>
                                 </div>
                                 <button class="copy-action-btn flex-shrink-0" onclick="copyText('${s.phone}')">Копировать</button>
                             </div>
 
                             <div class="price-card overflow-hidden">
-                                <div class="bg-indigo-600 px-5 py-2.5 border-b border-indigo-700">
-                                    <p class="text-[10px] font-black text-white uppercase tracking-[0.15em]">Прайс на замену двигателя:</p>
+                                <div class="bg-indigo-600 px-4 py-2 border-b border-indigo-700">
+                                    <p class="text-[9px] font-black text-white uppercase tracking-[0.1em]">Прайс на замену ДВС:</p>
                                 </div>
-                                <div class="p-2">${pRows || '<p class="text-center py-6 text-slate-400 font-bold italic text-xs uppercase">Уточняйте по телефону</p>'}</div>
+                                <div class="p-1">${pRows || '<p class="text-center py-4 text-slate-400 font-bold italic text-xs uppercase">Уточняйте по телефону</p>'}</div>
                             </div>
                         </div>
                     `;
@@ -293,7 +290,7 @@
             };
 
             function updateUI() {
-                const f = search.value;
+                const f = search.value.trim(); // Добавлена очистка от пробелов
                 nL.classList.add('hidden');
                 nS.classList.add('hidden');
 
